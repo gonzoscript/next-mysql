@@ -1,25 +1,14 @@
-import fetch from 'isomorphic-unfetch'
 import Link from 'next/link'
+const db = require('lib/db')
+const escape = require('sql-template-strings')
 
-HomePage.getInitialProps = async ({ req, query }) => {
-  const protocol = req
-    ? `${req.headers['x-forwarded-proto']}:`
-    : location.protocol
-  const host = req ? req.headers['x-forwarded-host'] : location.host
-  const pageRequest = `${protocol}//${host}/api/profiles?page=${query.page ||
-    1}&limit=${query.limit || 9}`
-  const res = await fetch(pageRequest)
-  const json = await res.json()
-  return json
-}
-
-function HomePage({ profiles, page, pageCount }) {
+export default function HomePage({ profiles, page, pageCount }) {
   return (
     <>
       <ul>
         {profiles.map(p => (
           <li className="profile" key={p.id}>
-            <Link href={`/profile?id=${p.id}`}>
+            <Link href={`/profiles/${p.id}`}>
               <a>
                 <img src={p.avatar} />
                 <span>{p.name}</span>
@@ -44,4 +33,24 @@ function HomePage({ profiles, page, pageCount }) {
   )
 }
 
-export default HomePage
+export async function getStaticProps({params}) {
+  const page = parseInt(params?.page || 1)
+  const limit = parseInt(params?.limit || 9)
+  const profiles = await db.query(escape`
+    SELECT *
+    FROM profiles
+    ORDER BY id
+    LIMIT ${(page - 1) * limit}, ${limit}
+  `).then(res => JSON.parse(JSON.stringify(res)))
+  const count = await db.query(escape`
+    SELECT COUNT(*)
+    AS profilesCount
+    FROM profiles
+  `).then(res => JSON.parse(JSON.stringify(res)))
+  const { profilesCount } = count[0]
+  const pageCount = Math.ceil(profilesCount / limit)
+  return {
+    props: { profiles, pageCount, page },
+    unstable_revalidate: 60
+  }
+}
