@@ -46,7 +46,10 @@ export async function getStaticProps({params}) {
     SELECT COUNT(*)
     AS profilesCount
     FROM profiles
-  `).then(res => JSON.parse(JSON.stringify(res)))
+  `).then(res => {
+    console.log("profile count response:\n\n", res, "\n")
+    JSON.parse(JSON.stringify(res))
+  })
   const { profilesCount } = count[0]
   const pageCount = Math.ceil(profilesCount / limit)
   return {
