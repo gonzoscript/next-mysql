@@ -2,7 +2,7 @@ import Link from 'next/link'
 const db = require('lib/db')
 const escape = require('sql-template-strings')
 
-export default function HomePage({ profiles, page, pageCount }) {
+export default function HomePage({ profiles }) {
   return (
     <>
       <ul>
@@ -17,43 +17,18 @@ export default function HomePage({ profiles, page, pageCount }) {
           </li>
         ))}
       </ul>
-      <nav>
-        {page > 1 && (
-          <Link href={`/?page=${page - 1}&limit=9`}>
-            <a>Previous</a>
-          </Link>
-        )}
-        {page < pageCount && (
-          <Link href={`/?page=${page + 1}&limit=9`}>
-            <a className="next">Next</a>
-          </Link>
-        )}
-      </nav>
     </>
   )
 }
 
 export async function getStaticProps({params}) {
-  const page = parseInt(params?.page || 1)
-  const limit = parseInt(params?.limit || 9)
   const profiles = await db.query(escape`
     SELECT *
     FROM profiles
     ORDER BY id
-    LIMIT ${(page - 1) * limit}, ${limit}
   `).then(res => JSON.parse(JSON.stringify(res)))
-  const count = await db.query(escape`
-    SELECT COUNT(*)
-    AS profilesCount
-    FROM profiles
-  `).then(res => {
-    return JSON.parse(JSON.stringify(res))
-  })
-  console.log(count)
-  const profilesCount = count[0]?.profileCount ?? 4
-  const pageCount = Math.ceil(profilesCount / limit)
   return {
-    props: { profiles, pageCount, page },
+    props: { profiles },
     unstable_revalidate: 60
   }
 }
