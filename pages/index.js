@@ -49,7 +49,8 @@ export async function getStaticProps({params}) {
   `).then(res => {
     return JSON.parse(JSON.stringify(res))
   })
-  const { profilesCount } = count[0]
+  console.log(count)
+  const profilesCount = count[0]?.profileCount ?? 4
   const pageCount = Math.ceil(profilesCount / limit)
   return {
     props: { profiles, pageCount, page },

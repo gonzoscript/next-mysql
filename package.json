@@ -7,7 +7,7 @@
     "dev": "next dev",
     "build": "node node_modules/next/dist/bin/next build",
     "start": "node node_modules/next/dist/bin/next start",
-    "bs": "npm run build && npm start"
+    "bs": "rm -rf .next/ && npm run build && npm start"
   },
   "author": "",
   "license": "ISC",
